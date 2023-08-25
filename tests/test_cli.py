@@ -122,6 +122,7 @@ def test_cli_replay(mocker, cli_runner):
         directory=None,
         accept_hooks=True,
         keep_project_on_failure=False,
+        dump_input=False,
     )
 
 
@@ -149,6 +150,7 @@ def test_cli_replay_file(mocker, cli_runner):
         directory=None,
         accept_hooks=True,
         keep_project_on_failure=False,
+        dump_input=False,
     )
 
 
@@ -201,6 +203,7 @@ def test_cli_exit_on_noinput_and_replay(mocker, cli_runner):
         directory=None,
         accept_hooks=True,
         keep_project_on_failure=False,
+        dump_input=False,
     )
 
 
@@ -237,6 +240,7 @@ def test_run_cookiecutter_on_overwrite_if_exists_and_replay(
         directory=None,
         accept_hooks=True,
         keep_project_on_failure=False,
+        dump_input=False,
     )
 
 
@@ -294,6 +298,7 @@ def test_cli_output_dir(mocker, cli_runner, output_dir_flag, output_dir):
         directory=None,
         accept_hooks=True,
         keep_project_on_failure=False,
+        dump_input=False,
     )
 
 
@@ -339,6 +344,7 @@ def test_user_config(mocker, cli_runner, user_config_path):
         directory=None,
         accept_hooks=True,
         keep_project_on_failure=False,
+        dump_input=False,
     )
 
 
@@ -370,6 +376,7 @@ def test_default_user_config_overwrite(mocker, cli_runner, user_config_path):
         directory=None,
         accept_hooks=True,
         keep_project_on_failure=False,
+        dump_input=False,
     )
 
 
@@ -396,6 +403,7 @@ def test_default_user_config(mocker, cli_runner):
         directory=None,
         accept_hooks=True,
         keep_project_on_failure=False,
+        dump_input=False,
     )
 
 
@@ -665,6 +673,7 @@ def test_cli_accept_hooks(
         skip_if_file_exists=False,
         accept_hooks=expected,
         keep_project_on_failure=False,
+        dump_input=False,
     )
 
 
@@ -685,3 +694,20 @@ def test_cli_with_json_decoding_error(cli_runner):
     # this point.
     path = os.path.sep.join(['tests', 'fake-repo-bad-json', 'cookiecutter.json'])
     assert path in result.output
+
+
+@pytest.mark.usefixtures('remove_fake_project_dir')
+def test_cli_with_dump_input_option(cli_runner):
+    """Test cli invocation works with `dump_input` flag."""
+    template_path = 'tests/fake-repo-pre/'
+    created_input_file_path = 'fake-project/.cookiecutter.json'
+    result = cli_runner(template_path, '--no-input', '--dump-input')
+
+    assert result.exit_code == 0
+    assert os.path.exists(created_input_file_path)
+
+    with open(os.path.join(template_path, 'cookiecutter.json')) as f:
+        input_dict = json.load(f)
+    with open(created_input_file_path) as f:
+        output_dict = json.load(f)
+    assert all(item in output_dict.items() for item in input_dict.items())
